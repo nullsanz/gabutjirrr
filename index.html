@@ -29,6 +29,29 @@
             box-shadow: 0 4px 6px -1px rgba(13, 148, 136, 0.3), 0 2px 4px -2px rgba(13, 148, 136, 0.3);
             transform: scale(1.02);
         }
+
+        /* Tampilan mobile: Sembunyikan sidebar secara default, pindahkan ke lapisan atas */
+        #sidebar {
+            /* w-64 di desktop, hidden di mobile */
+            transition: transform 0.3s ease-in-out;
+            transform: translateX(-100%);
+            position: fixed; /* Penting untuk layar kecil */
+            z-index: 40;
+        }
+
+        /* Tampilan desktop: Sidebar selalu terlihat */
+        @media (min-width: 1024px) { /* breakpoint lg */
+            #main-app-view {
+                display: flex !important;
+            }
+            #sidebar {
+                transform: translateX(0);
+                position: sticky;
+            }
+            #mobile-header {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body class="p-0">
@@ -44,7 +67,7 @@
                 <div class="space-y-4">
                     <div>
                         <label for="login-email" class="block text-sm font-medium text-gray-700">Email</label>
-                        <input type="text" id="login-email" placeholder="contoh@domain.com" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500">
+                        <input type="text" id="login-email" placeholder="lukman@ganteng.com" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500">
                     </div>
                     <div>
                         <label for="login-password" class="block text-sm font-medium text-gray-700">Password</label>
@@ -62,12 +85,27 @@
             </div>
         </div>
 
-        <!-- ========================== VIEW 2: MAIN APP (Sidebar & Content) ========================== --><div id="main-app-view" class="hidden flex min-h-screen bg-gray-100">
+        <!-- ========================== VIEW 2: MAIN APP (Sidebar & Content) ========================== --><div id="main-app-view" class="hidden lg:flex min-h-screen bg-gray-100">
             
-            <!-- Sidebar Navigation --><div id="sidebar" class="w-64 bg-gray-900 text-white flex flex-col p-4 shadow-2xl sticky top-0 h-screen">
-                <div class="text-xl font-bold mb-8 text-teal-500 flex items-center">
+            <!-- Mobile Header/Navigation Toggle --><div id="mobile-header" class="lg:hidden sticky top-0 w-full bg-gray-900 text-white p-4 flex justify-between items-center z-30 shadow-md">
+                <div class="text-xl font-bold text-teal-500 flex items-center">
                     <img src="https://portofoliolukman.vercel.app/assets/logo-CeL7Jp1v.png" alt="Logo Lukman App" class="w-8 h-8 mr-2 rounded-full">
                     Lukman App
+                </div>
+                <button onclick="toggleSidebar()" class="p-1 rounded hover:bg-teal-700 transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                </button>
+            </div>
+
+            <!-- Sidebar Navigation --><div id="sidebar" class="w-64 bg-gray-900 text-white flex flex-col p-4 shadow-2xl h-screen top-0">
+                <div class="text-xl font-bold mb-8 text-teal-500 flex items-center justify-between">
+                    <div class="flex items-center">
+                        <img src="https://portofoliolukman.vercel.app/assets/logo-CeL7Jp1v.png" alt="Logo Lukman App" class="w-8 h-8 mr-2 rounded-full">
+                        Lukman App
+                    </div>
+                    <button onclick="toggleSidebar()" class="lg:hidden p-1 rounded hover:bg-teal-700 transition">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
                 </div>
                 <nav class="space-y-2 flex-grow">
                     <a href="#" onclick="switchPage('menu')" id="nav-menu" class="flex items-center p-3 rounded-lg nav-active transition duration-150 hover:bg-teal-600">
@@ -82,14 +120,14 @@
                 </nav>
                 <div class="mt-auto pt-4 border-t border-gray-700">
                     <p class="text-sm text-gray-400 mb-2">Logged in as:</p>
-                    <p id="user-display" class="font-medium text-white break-words">user@example.com</p>
+                    <p id="user-display" class="font-medium text-white break-words">lukmangamteng@example.com</p>
                     <button onclick="logout()" class="w-full mt-4 py-2 text-sm bg-red-600 hover:bg-red-700 rounded-lg transition duration-150">
                         Logout
                     </button>
                 </div>
             </div>
 
-            <!-- Main Content Area --><div id="content-area" class="flex-1 overflow-y-auto p-8">
+            <!-- Main Content Area --><div id="content-area" class="flex-1 overflow-y-auto p-4 lg:p-8">
                 <div id="page-content" class="max-w-4xl mx-auto">
                     <!-- Konten halaman (Menu, Keranjang, Profil, Tracking) akan di-render di sini --></div>
             </div>
@@ -118,6 +156,26 @@
         </div>
     </div>
     <!-- ============================================================================== --><script>
+        
+        // ========================== FUNGSI TOGGLE SIDEBAR UNTUK MOBILE ==========================
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobile-overlay');
+            
+            if (sidebar.style.transform === 'translateX(0px)') {
+                sidebar.style.transform = 'translateX(-100%)';
+                if (overlay) overlay.remove();
+            } else {
+                sidebar.style.transform = 'translateX(0px)';
+                // Tambahkan overlay gelap di belakang sidebar
+                const newOverlay = document.createElement('div');
+                newOverlay.id = 'mobile-overlay';
+                newOverlay.className = 'fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden';
+                newOverlay.onclick = toggleSidebar;
+                document.body.appendChild(newOverlay);
+            }
+        }
+        
         // Data Menu (Ditambahkan properti 'imageURL' dan 'rating')
         const daftarMenu = [
             // Makanan
@@ -269,6 +327,10 @@
                     navElement.classList.toggle('nav-active', id === pageName);
                 }
             });
+            // Sembunyikan sidebar setelah navigasi di mobile
+            if (window.innerWidth < 1024) {
+                 toggleSidebar();
+            }
         }
 
         function switchPage(pageName) {
@@ -432,7 +494,7 @@
             container.innerHTML = `
                 <h2 class="text-3xl font-bold text-gray-900 mb-6">🛒 Keranjang Belanja</h2>
                 <div id="keranjang-content" class="bg-white p-6 rounded-xl shadow-lg">
-                    <p class="text-gray-500 italic text-center" id="cart-empty-message">Keranjang Anda masih kosong.</p>
+                    <p class="text-gray-500 italic text-center" id="cart-empty-message">Keranjang Elu masih kosong.</p>
                 </div>
                 <div id="receipt-container" class="mt-8 pt-4 border-t border-gray-300 hidden">
                     <h3 class="text-2xl font-bold text-gray-800 mb-4">Rincian Pembayaran Akhir</h3>
@@ -453,11 +515,11 @@
                     <!-- Column 1: Profile Info --><div class="bg-white p-6 rounded-xl shadow-lg space-y-4">
                         <p class="text-lg font-semibold border-b pb-2">Informasi Pengguna</p>
                         <div class="flex flex-col sm:flex-row justify-between">
-                            <span class="font-medium text-gray-600">Nama Pengguna:</span>
+                            <span class="font-medium text-gray-600">Nama Lu:</span>
                             <span class="text-gray-900">${appState.userEmail.split('@')[0].toUpperCase()}</span>
                         </div>
                         <div class="flex flex-col sm:flex-row justify-between">
-                            <span class="font-medium text-gray-600">Email:</span>
+                            <span class="font-medium text-gray-600">Email lu:</span>
                             <span class="text-gray-900">${appState.userEmail}</span>
                         </div>
                         <div class="flex flex-col sm:flex-row justify-between">
@@ -470,7 +532,7 @@
                         </div>
                     </div>
                     
-                    <!-- Column 2: 3D Animation (Pikachu) --><div class="bg-white p-6 rounded-xl shadow-lg flex flex-col">
+                    <!-- Column 2: 3D Pikachu Niiiii --><div class="bg-white p-6 rounded-xl shadow-lg flex flex-col">
                         <h3 class="text-xl font-semibold border-b pb-2 mb-4 text-teal-600">⚡ Mascot 3D Viewer (Pikachu)</h3>
                         <div class="w-full flex-grow relative" style="min-height: 300px;">
                             <iframe 
