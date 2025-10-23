@@ -67,7 +67,7 @@
                 <div class="space-y-4">
                     <div>
                         <label for="login-email" class="block text-sm font-medium text-gray-700">Email</label>
-                        <input type="text" id="login-email" placeholder="lukman@ganteng.com" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500">
+                        <input type="text" id="login-email" placeholder="contoh@lukman.com" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500">
                     </div>
                     <div>
                         <label for="login-password" class="block text-sm font-medium text-gray-700">Password</label>
@@ -85,7 +85,9 @@
             </div>
         </div>
 
-        <!-- ========================== VIEW 2: MAIN APP (Sidebar & Content) ========================== --><div id="main-app-view" class="hidden lg:flex min-h-screen bg-gray-100">
+        <!-- ========================== VIEW 2: MAIN APP (Sidebar & Content) ========================== -->
+        <!-- Tambahkan 'hidden' secara default di sini -->
+        <div id="main-app-view" class="hidden min-h-screen bg-gray-100 lg:flex">
             
             <!-- Mobile Header/Navigation Toggle --><div id="mobile-header" class="lg:hidden sticky top-0 w-full bg-gray-900 text-white p-4 flex justify-between items-center z-30 shadow-md">
                 <div class="text-xl font-bold text-teal-500 flex items-center">
@@ -186,7 +188,7 @@
             // Minuman
             { id: 5, namaMenu: "es teh jus guwla bawtu", hargaSatuan: 8000, kategoriMenu: "Minuman", stok: 100, imageURL: "https://awsimages.detik.net.id/community/media/visual/2024/03/10/ilustrasi-teh-manis_169.jpeg?w=600&q=90", rating: 4.0 }, 
             { id: 6, namaMenu: "jus jeruk asli pekalongan", hargaSatuan: 15000, kategoriMenu: "Minuman", stok: 100, imageURL: "https://res.cloudinary.com/dk0z4ums3/image/upload/v1699924261/attached_image/9-manfaat-jus-jeruk-yang-segarkan-harimu.jpg", rating: 4.2 }, 
-            { id: 7, namaMenu: "kopi kapal karam", hargaSatuan: 20000, kategoriMenu: "Minuman", stok: 100, imageURL: "https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcTH9qxTx7-zcnZ_MaOwcPT6p4zH3pNbwPyvuT_5kBcGBXN7Fz2WS2vsfGhl0w6vAiyogZhy0eDPSCCKxB5St1R0_L7h4dA4ym2_8fIyHg", rating: 3.5 },
+            { id: 7, namaMenu: "kopi kapal karam", hargaSatuan: 20000, kategoriMenu: "Minuman", stok: 100, imageURL: "https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcTH9qxTx7-zcnZ_MaOwcPT6p4zH3pNbwPyvuT_5kBcGBXN7Fz2WS2vsfGhl0w6vAiyogZhy0eDPSCCKxB5St1R0_L7h4dAym2_8fIyHg", rating: 3.5 },
             { id: 8, namaMenu: "air putihh", hargaSatuan: 5000, kategoriMenu: "Minuman", stok: 100, imageURL: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRSPgSRcghvMNeQ6wrv4D0-15v8yfTsoTqiMw&s", rating: 5.0 },
         ];
 
@@ -309,9 +311,19 @@
         // ========================== LOGIC NAVIGASI & VIEW ==========================
 
         function switchAppView(isLoggedIn) {
-            document.getElementById('login-view').classList.toggle('hidden', isLoggedIn);
-            document.getElementById('main-app-view').classList.toggle('hidden', !isLoggedIn);
+            const mainAppView = document.getElementById('main-app-view');
             
+            document.getElementById('login-view').classList.toggle('hidden', isLoggedIn);
+            
+            // Tampilkan main-app-view jika logged in, dan tambahkan kembali kelas flex untuk desktop
+            if (isLoggedIn) {
+                mainAppView.classList.remove('hidden');
+                mainAppView.classList.add('lg:flex');
+            } else {
+                mainAppView.classList.add('hidden');
+                mainAppView.classList.remove('lg:flex');
+            }
+
             if (isLoggedIn) {
                 switchPage('menu'); // Pindah ke halaman menu setelah login
             } else {
@@ -962,12 +974,17 @@
         // Inisialisasi Aplikasi
         window.onload = () => {
             loadState(); // Muat state dari localStorage
-            // Jika email terisi, langsung masuk ke halaman utama, jika tidak, ke login.
+            // Perbaikan logic di sini: gunakan switchAppView(true/false) untuk mengontrol tampilan
             if (appState.userEmail) {
                 document.getElementById('user-display').textContent = appState.userEmail;
                 switchAppView(true);
             } else {
-                switchAppView(false); 
+                // Tampilkan login view, sembunyikan main-app-view
+                document.getElementById('main-app-view').classList.add('hidden');
+                document.getElementById('login-view').classList.remove('hidden');
+                // Pastikan placeholder di login sesuai
+                document.getElementById('login-email').placeholder = 'contoh@lukman.com';
+                document.getElementById('login-email').value = localStorage.getItem('userEmail') || '';
             }
         };
     </script>
