@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restoran App - Toko Online</title>
+    <!-- Load Tailwind CSS --><script src="https://cdn.tailwindcss.com"></script>
+    <!-- Setel Font Inter --><style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f7f9;
+        }
+        /* Custom class untuk input */
+        .quantity-input {
+            width: 60px;
+            padding: 4px 8px;
+            text-align: center;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+        }
+        /* Update Tema Warna ke Teal */
+        .step-active {
+            color: #0d9488; /* teal-600 */
+        }
+        .nav-active {
+            background-color: #0f766e; /* teal-700 */
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(13, 148, 136, 0.3), 0 2px 4px -2px rgba(13, 148, 136, 0.3);
+            transform: scale(1.02);
+        }
+    </style>
+</head>
+<body class="p-0">
+    <div id="app" class="min-h-screen">
+        
+        <!-- ========================== VIEW 1: LOGIN ========================== --><div id="login-view" class="flex items-center justify-center min-h-screen bg-gray-100">
+            <div class="max-w-md w-full p-8 bg-white rounded-xl shadow-2xl">
+                <h1 class="text-3xl font-extrabold text-gray-900 mb-2 text-center border-b-4 border-teal-500 pb-2">
+                    LOGIN RESTORAN LUKMAN
+                </h1>
+                <p class="text-center text-sm text-gray-500 mb-8">Masuk dulu brayyy isi apa aja bebas coyy.</p>
+
+                <div class="space-y-4">
+                    <div>
+                        <label for="login-email" class="block text-sm font-medium text-gray-700">Email</label>
+                        <input type="text" id="login-email" placeholder="contoh@domain.com" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500">
+                    </div>
+                    <div>
+                        <label for="login-password" class="block text-sm font-medium text-gray-700">Password</label>
+                        <input type="password" id="login-password" placeholder="Password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500">
+                    </div>
+                    
+                    <button id="login-button" onclick="login()" class="w-full py-3 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl shadow-lg transition duration-200">
+                        Masuk
+                    </button>
+                    
+                    <button onclick="displayErrorMessage('Fitur Reset Password belum terintegrasi dengan database.')" class="w-full text-sm text-gray-500 hover:text-teal-600 mt-2">
+                        Lupa Password?
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================== VIEW 2: MAIN APP (Sidebar & Content) ========================== --><div id="main-app-view" class="hidden flex min-h-screen bg-gray-100">
+            
+            <!-- Sidebar Navigation --><div id="sidebar" class="w-64 bg-gray-900 text-white flex flex-col p-4 shadow-2xl sticky top-0 h-screen">
+                <div class="text-xl font-bold mb-8 text-teal-500 flex items-center">
+                    <img src="https://portofoliolukman.vercel.app/assets/logo-CeL7Jp1v.png" alt="Logo Lukman App" class="w-8 h-8 mr-2 rounded-full">
+                    Lukman App
+                </div>
+                <nav class="space-y-2 flex-grow">
+                    <a href="#" onclick="switchPage('menu')" id="nav-menu" class="flex items-center p-3 rounded-lg nav-active transition duration-150 hover:bg-teal-600">
+                        <span class="mr-3">🍽️</span> Menu & Pemesanan
+                    </a>
+                    <a href="#" onclick="switchPage('cart')" id="nav-cart" class="flex items-center p-3 rounded-lg transition duration-150 hover:bg-teal-600">
+                        <span class="mr-3">🛒</span> Keranjang Belanja
+                    </a>
+                    <a href="#" onclick="switchPage('profile')" id="nav-profile" class="flex items-center p-3 rounded-lg transition duration-150 hover:bg-teal-600">
+                        <span class="mr-3">👤</span> Akun & Profil
+                    </a>
+                </nav>
+                <div class="mt-auto pt-4 border-t border-gray-700">
+                    <p class="text-sm text-gray-400 mb-2">Logged in as:</p>
+                    <p id="user-display" class="font-medium text-white break-words">user@example.com</p>
+                    <button onclick="logout()" class="w-full mt-4 py-2 text-sm bg-red-600 hover:bg-red-700 rounded-lg transition duration-150">
+                        Logout
+                    </button>
+                </div>
+            </div>
+
+            <!-- Main Content Area --><div id="content-area" class="flex-1 overflow-y-auto p-8">
+                <div id="page-content" class="max-w-4xl mx-auto">
+                    <!-- Konten halaman (Menu, Keranjang, Profil, Tracking) akan di-render di sini --></div>
+            </div>
+        </div>
+        
+    </div>
+
+    <!-- Kotak notifikasi error/sukses --><div id="error-box" class="fixed bottom-4 right-4 text-white p-3 rounded-xl shadow-xl transition-opacity duration-300 opacity-0 pointer-events-none"></div>
+
+    <!-- ========================== MODAL KONFIRMASI CHECKOUT ========================== --><div id="checkout-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white p-8 rounded-xl shadow-2xl max-w-sm w-full">
+            <h3 class="text-xl font-bold text-gray-900 mb-4 border-b pb-2">Konfirmasi Pembayaran</h3>
+            <p class="text-gray-700 mb-6">Anda yakin ingin melanjutkan pembayaran?</p>
+            <div class="bg-teal-50 p-3 rounded-lg text-center mb-6">
+                <p class="text-lg text-teal-800 font-bold">Total yang Harus Dibayar:</p>
+                <p id="modal-total-bayar" class="text-3xl font-extrabold text-teal-700"></p>
+            </div>
+            <div class="flex justify-end space-x-3">
+                <button onclick="closeCheckoutModal()" class="py-2 px-4 bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium rounded-lg transition duration-150">
+                    Batal
+                </button>
+                <button id="checkout-button-modal" onclick="confirmCheckout()" class="py-2 px-4 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-lg transition duration-150">
+                    Konfirmasi & Bayar
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- ============================================================================== --><script>
+        // Data Menu (Ditambahkan properti 'imageURL' dan 'rating')
+        const daftarMenu = [
+            // Makanan
+            { id: 1, namaMenu: "cumi hytam pak slamet", hargaSatuan: 35000, kategoriMenu: "Makanan", stok: 0, imageURL: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRddDXb8XsfgaGqyDxzyADoU03o72K_rKdL5g&s", rating: 3.0 }, 
+            { id: 2, namaMenu: "mie ayam Asep", hargaSatuan: 25000, kategoriMenu: "Makanan", stok: 100, imageURL: "https://nibble-images.b-cdn.net/nibble/original_images/asal_usul_mie_ayam_01_0ace759bee.jpg", rating: 4.5 },
+            { id: 3, namaMenu: "baso mas sabar", hargaSatuan: 40000, kategoriMenu: "Makanan", stok: 100, imageURL: "https://awsimages.detik.net.id/community/media/visual/2019/08/12/dca21bf3-923c-486f-bc2e-a3dcd759b1df_43.jpeg?w=1200", rating: 5.0 },
+            { id: 4, namaMenu: "gulai kambing mang jamal", hargaSatuan: 50000, kategoriMenu: "Makanan", stok: 100, imageURL: "https://images.tokopedia.net/img/KRMmCm/2023/6/19/fe61e91d-ccf6-4b95-9af1-5ec3c813e7e2.jpg", rating: 4.8 }, 
+            // Minuman
+            { id: 5, namaMenu: "es teh jus guwla bawtu", hargaSatuan: 8000, kategoriMenu: "Minuman", stok: 100, imageURL: "https://awsimages.detik.net.id/community/media/visual/2024/03/10/ilustrasi-teh-manis_169.jpeg?w=600&q=90", rating: 4.0 }, 
+            { id: 6, namaMenu: "jus jeruk asli pekalongan", hargaSatuan: 15000, kategoriMenu: "Minuman", stok: 100, imageURL: "https://res.cloudinary.com/dk0z4ums3/image/upload/v1699924261/attached_image/9-manfaat-jus-jeruk-yang-segarkan-harimu.jpg", rating: 4.2 }, 
+            { id: 7, namaMenu: "kopi kapal karam", hargaSatuan: 20000, kategoriMenu: "Minuman", stok: 100, imageURL: "https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcTH9qxTx7-zcnZ_MaOwcPT6p4zH3pNbwPyvuT_5kBcGBXN7Fz2WS2vsfGhl0w6vAiyogZhy0eDPSCCKxB5St1R0_L7h4dA4ym2_8fIyHg", rating: 3.5 },
+            { id: 8, namaMenu: "air putihh", hargaSatuan: 5000, kategoriMenu: "Minuman", stok: 100, imageURL: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRSPgSRcghvMNeQ6wrv4D0-15v8yfTsoTqiMw&s", rating: 5.0 },
+        ];
+
+        // State Global Aplikasi (Refactored to single object)
+        let appState = {
+            userEmail: '',
+            pesanan: {}, // { menuId: jumlah }
+            currentOrder: null, 
+            trackingInterval: null,
+            trackingStep: 1,
+            filterCategory: 'Semua', // State untuk filter
+            searchTerm: '', // State untuk search
+            biayaPelayanan: 20000 // Dipindahkan dari konstanta global
+        };
+
+        // ========================== LOGIC PERSISTENSI ==========================
+
+        function saveState() {
+            localStorage.setItem('userEmail', appState.userEmail);
+            localStorage.setItem('pesanan', JSON.stringify(appState.pesanan));
+        }
+
+        function loadState() {
+            const storedEmail = localStorage.getItem('userEmail');
+            const storedPesanan = localStorage.getItem('pesanan');
+
+            if (storedEmail) {
+                appState.userEmail = storedEmail;
+            }
+            if (storedPesanan) {
+                try {
+                    // Hanya muat pesanan yang valid (cek ID masih ada di daftarMenu)
+                    const parsedPesanan = JSON.parse(storedPesanan);
+                    const validPesanan = {};
+                    for (const id in parsedPesanan) {
+                        if (daftarMenu.some(m => m.id === parseInt(id))) {
+                            validPesanan[id] = parsedPesanan[id];
+                        }
+                    }
+                    appState.pesanan = validPesanan;
+                } catch (e) {
+                    console.error("Failed to parse stored pesanan:", e);
+                    appState.pesanan = {};
+                }
+            }
+        }
+
+        // ========================== FUNGSI UTILITAS ==========================
+
+        const formatRupiah = (angka) => {
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0
+            }).format(angka);
+        };
+        
+        function displayErrorMessage(message, isSuccess = false) {
+            let errorBox = document.getElementById('error-box');
+            errorBox.textContent = message;
+            errorBox.classList.remove('opacity-0', 'bg-red-600', 'bg-green-600', 'pointer-events-none');
+            errorBox.classList.add('opacity-100', isSuccess ? 'bg-green-600' : 'bg-red-600');
+            
+            clearTimeout(window.errorTimeout);
+            window.errorTimeout = setTimeout(() => {
+                errorBox.classList.remove('opacity-100');
+                errorBox.classList.add('opacity-0', 'pointer-events-none');
+            }, 3000);
+        }
+
+        // ========================== LOGIC AUTENTIKASI (ASYNC) ==========================
+
+        function login() {
+            const emailInput = document.getElementById('login-email').value.trim();
+            const passwordInput = document.getElementById('login-password').value.trim();
+            const loginBtn = document.getElementById('login-button');
+
+            if (!emailInput.includes('@')) {
+                displayErrorMessage("Login Gagal: gini cantikk email minimal pake ini '@' yaa.");
+                return;
+            }
+            
+            // Simulasi Loading State
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<span class="animate-spin mr-2">🔄</span> Sabarr cantik...';
+
+            setTimeout(() => {
+                // Logika login berhasil
+                appState.userEmail = emailInput;
+                document.getElementById('user-display').textContent = appState.userEmail;
+                saveState(); // Simpan state user
+
+                // Reset button state
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = 'Masuk';
+
+                switchAppView(true);
+                displayErrorMessage(`Selamat datang, ${appState.userEmail.split('@')[0]}!`, true);
+
+            }, 1500); // 1.5 seconds delay
+        }
+
+        function logout() {
+            appState.userEmail = '';
+            appState.pesanan = {};
+            appState.currentOrder = null;
+            appState.trackingStep = 1;
+            appState.filterCategory = 'Semua';
+            appState.searchTerm = '';
+            if (appState.trackingInterval) clearInterval(appState.trackingInterval);
+
+            saveState(); // Simpan state kosong
+            
+            switchAppView(false);
+            document.getElementById('login-email').value = '';
+            document.getElementById('login-password').value = '';
+            displayErrorMessage("Anda telah berhasil logout.", true);
+        }
+
+        // ========================== LOGIC NAVIGASI & VIEW ==========================
+
+        function switchAppView(isLoggedIn) {
+            document.getElementById('login-view').classList.toggle('hidden', isLoggedIn);
+            document.getElementById('main-app-view').classList.toggle('hidden', !isLoggedIn);
+            
+            if (isLoggedIn) {
+                switchPage('menu'); // Pindah ke halaman menu setelah login
+            } else {
+                 // Isi input login dengan email tersimpan jika ada (untuk UX)
+                document.getElementById('login-email').value = appState.userEmail;
+            }
+        }
+
+        function updateSidebar(pageName) {
+            ['menu', 'cart', 'profile'].forEach(id => {
+                const navElement = document.getElementById(`nav-${id}`);
+                if (navElement) {
+                    navElement.classList.toggle('nav-active', id === pageName);
+                }
+            });
+        }
+
+        function switchPage(pageName) {
+            const contentArea = document.getElementById('page-content');
+            contentArea.innerHTML = ''; 
+            updateSidebar(pageName);
+            
+            if (pageName !== 'tracking' && appState.trackingInterval) {
+                clearInterval(appState.trackingInterval);
+                appState.trackingInterval = null;
+                appState.trackingStep = 1;
+            }
+
+            if (pageName === 'menu') {
+                renderMenuPage(contentArea); 
+            } else if (pageName === 'cart') {
+                renderCartPage(contentArea);
+            } else if (pageName === 'profile') {
+                renderProfilePage(contentArea);
+            } else if (pageName === 'tracking' && appState.currentOrder) {
+                renderTrackingPage(contentArea);
+            }
+        }
+
+        // ========================== LOGIC PAGE RENDERING ==========================
+
+        // --- Halaman 1: Menu ---
+        function renderMenuPage(container) {
+            container.innerHTML = `
+                <h2 class="text-3xl font-bold text-gray-900 mb-6">🍽️ Menu & Pemesanan</h2>
+                <!-- Search and Filter Bar --><div class="mb-6 p-4 bg-white rounded-xl shadow-md border border-gray-200 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="sm:col-span-2">
+                        <label for="menu-search" class="sr-only">Cari Menu</label>
+                        <input type="text" id="menu-search" oninput="handleSearchChange(this.value)"
+                               placeholder="Cari menu (ex: mie ayam)" 
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500"
+                               value="${appState.searchTerm}">
+                    </div>
+                    <div>
+                        <label for="menu-filter" class="sr-only">Filter Kategori</label>
+                        <select id="menu-filter" onchange="handleFilterChange(this.value)"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500 bg-white">
+                            <option value="Semua">Semua Kategori</option>
+                            <option value="Makanan">Makanan</option>
+                            <option value="Minuman">Minuman</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Kolom Menu --><div class="lg:col-span-2">
+                        <!-- Kontainer untuk semua kartu menu --><div id="menu-list-container" class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <!-- Menu items (cards) will be rendered here --></div>
+                    </div>
+                    <!-- Kolom Ringkasan Cepat --><div class="lg:col-span-1 bg-gray-50 p-5 rounded-xl shadow-inner sticky top-8 h-fit">
+                        <h3 class="text-xl font-bold text-teal-600 mb-4">Ringkasan Keranjang</h3>
+                        <div id="order-summary-quick">
+                            <p class="text-gray-500 italic text-sm">Pilih menu di samping untuk melihat ringkasan.</p>
+                        </div>
+                        <button onclick="switchPage('cart')" id="go-to-cart-button" class="w-full mt-6 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium rounded-xl transition duration-200 hidden">
+                            Lihat Keranjang Lengkap
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            const filterElement = document.getElementById('menu-filter');
+            if (filterElement) {
+                filterElement.value = appState.filterCategory;
+            }
+            renderMenuItems(); 
+        }
+
+        // Handler untuk Search
+        function handleSearchChange(value) {
+            appState.searchTerm = value.toLowerCase();
+            renderMenuItems();
+        }
+
+        // Handler untuk Filter
+        function handleFilterChange(value) {
+            appState.filterCategory = value;
+            renderMenuItems();
+        }
+
+        // Rendering Menu Items (Menampilkan Rating)
+        function renderMenuItems() {
+            const containerAll = document.getElementById('menu-list-container');
+            if (!containerAll) return; 
+
+            containerAll.innerHTML = '';
+            
+            const filteredMenu = daftarMenu.filter(menu => {
+                const matchesSearch = menu.namaMenu.toLowerCase().includes(appState.searchTerm);
+                const matchesCategory = appState.filterCategory === 'Semua' || menu.kategoriMenu === appState.filterCategory;
+                return matchesSearch && matchesCategory;
+            }).sort((a, b) => {
+                if (a.stok === 0 && b.stok > 0) return 1;
+                if (a.stok > 0 && b.stok === 0) return -1;
+                return 0;
+            });
+
+            filteredMenu.forEach(menu => {
+                const isOutOfStock = menu.stok === 0;
+                const disabledAttribute = isOutOfStock ? 'disabled' : '';
+                // Animasi hover pada card
+                const cardClass = isOutOfStock ? 'opacity-60 grayscale blur-[1px] pointer-events-none' : 'hover:shadow-2xl hover:scale-[1.01] transition duration-300';
+                const stockOverlay = isOutOfStock ? 
+                    `<div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-xl">
+                        <span class="text-white text-xl font-black bg-red-600 px-4 py-2 rounded-full shadow-lg transform rotate-[-5deg] animate-pulse">KOSONG</span>
+                    </div>` : '';
+
+                // Rating Logic (Fitur 4)
+                const rating = menu.rating || 0;
+                const fullStars = Math.floor(rating);
+                // Menambahkan bintang penuh dan setengah/ikon khusus untuk pecahan
+                const starHtml = Array(fullStars).fill('⭐').join('') + (rating % 1 !== 0 ? '✨' : '');
+
+
+                const html = `
+                    <div class="relative bg-white border border-gray-200 rounded-xl shadow-lg ${cardClass}">
+                        ${stockOverlay}
+                        <div class="h-32 rounded-t-xl overflow-hidden">
+                            <img src="${menu.imageURL}" alt="${menu.namaMenu}" 
+                                onerror="this.onerror=null;this.src='https://placehold.co/400x300/14B8A6/FFFFFF?text=${menu.namaMenu.split(' ')[0]}';" 
+                                class="w-full h-full object-cover">
+                        </div>
+                        <div class="p-4">
+                            <p class="font-bold text-gray-900 capitalize text-lg">${menu.namaMenu}</p>
+                            <div class="flex justify-between items-center my-1">
+                                <span class="inline-block px-2 py-0.5 text-xs font-semibold rounded-full ${menu.kategoriMenu === 'Makanan' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}">
+                                    ${menu.kategoriMenu}
+                                </span>
+                                <span class="text-sm text-gray-700 flex items-center">Rating: ${starHtml} (${rating})</span>
+                            </div>
+                            <p class="text-md text-teal-700 font-bold my-2">${formatRupiah(menu.hargaSatuan)}</p>
+                            <div class="flex justify-between items-center mt-2">
+                                <span class="text-sm text-gray-600">Stok: ${isOutOfStock ? '0' : 'Tersedia'}</span>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    max="${menu.stok}"
+                                    value="${appState.pesanan[menu.id] || 0}"
+                                    data-id="${menu.id}"
+                                    oninput="handleQuantityChange(this)"
+                                    class="quantity-input focus:ring-teal-500 focus:border-teal-500"
+                                    ${disabledAttribute}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                `;
+                containerAll.innerHTML += html;
+            });
+
+            calculateAndDisplayOrder();
+        }
+
+        // --- Halaman 2: Keranjang ---
+        function renderCartPage(container) {
+            container.innerHTML = `
+                <h2 class="text-3xl font-bold text-gray-900 mb-6">🛒 Keranjang Belanja</h2>
+                <div id="keranjang-content" class="bg-white p-6 rounded-xl shadow-lg">
+                    <p class="text-gray-500 italic text-center" id="cart-empty-message">Keranjang Anda masih kosong.</p>
+                </div>
+                <div id="receipt-container" class="mt-8 pt-4 border-t border-gray-300 hidden">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">Rincian Pembayaran Akhir</h3>
+                    <div id="struk-detail" class="bg-gray-50 p-5 rounded-lg"></div>
+                    <!-- Tombol memanggil Modal Konfirmasi --><button id="checkout-button" onclick="openCheckoutModal()" class="w-full mt-6 py-3 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl shadow-lg transition duration-200">
+                        Bayar & Konfirmasi Pesanan
+                    </button>
+                </div>
+            `;
+            calculateAndDisplayOrder(true);
+        }
+
+        // --- Halaman 3: Profil (Ditambahkan 3D Viewer) ---
+        function renderProfilePage(container) {
+            container.innerHTML = `
+                <h2 class="text-3xl font-bold text-gray-900 mb-6">👤 Akun & Profil</h2>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Column 1: Profile Info --><div class="bg-white p-6 rounded-xl shadow-lg space-y-4">
+                        <p class="text-lg font-semibold border-b pb-2">Informasi Pengguna</p>
+                        <div class="flex flex-col sm:flex-row justify-between">
+                            <span class="font-medium text-gray-600">Nama Pengguna:</span>
+                            <span class="text-gray-900">${appState.userEmail.split('@')[0].toUpperCase()}</span>
+                        </div>
+                        <div class="flex flex-col sm:flex-row justify-between">
+                            <span class="font-medium text-gray-600">Email:</span>
+                            <span class="text-gray-900">${appState.userEmail}</span>
+                        </div>
+                        <div class="flex flex-col sm:flex-row justify-between">
+                            <span class="font-medium text-gray-600">Status:</span>
+                            <span class="text-green-600 font-bold">Aktif</span>
+                        </div>
+                        <div class="flex flex-col sm:flex-row justify-between">
+                            <span class="font-medium text-gray-600">Biaya Pelayanan Default:</span>
+                            <span class="text-gray-900">${formatRupiah(appState.biayaPelayanan)}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Column 2: 3D Animation (Pikachu) --><div class="bg-white p-6 rounded-xl shadow-lg flex flex-col">
+                        <h3 class="text-xl font-semibold border-b pb-2 mb-4 text-teal-600">⚡ Mascot 3D Viewer (Pikachu)</h3>
+                        <div class="w-full flex-grow relative" style="min-height: 300px;">
+                            <iframe 
+                                src="https://sketchfab.com/models/bdd57b2bf2374bb89251c083cb2d834e/embed?autospin=1&autostart=1&ui_controls=0" 
+                                frameborder="0" 
+                                allow="autoplay; fullscreen; xr-spatial-tracking" 
+                                xr-spatial-tracking
+                                execution-while-out-of-viewport 
+                                execution-while-not-rendered 
+                                web-share 
+                                class="absolute top-0 left-0 w-full h-full rounded-xl shadow-inner"
+                                title="Pikachu 3D Model">
+                            </iframe>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-4 text-center">Model 3D untuk hiburan pelanggan. Anda bisa memutarnya!</p>
+                    </div>
+                </div>
+                
+                <div class="mt-8">
+                    <button onclick="logout()" class="py-2 px-4 bg-red-600 hover:bg-red-700 rounded-lg transition duration-200">
+                        Logout Sekarang
+                    </button>
+                </div>
+            `;
+        }
+        // --- Halaman 4: Tracking ---
+        function renderTrackingPage(container) {
+            container.innerHTML = `
+                <h2 class="text-3xl font-bold text-teal-600 mb-6 text-center">🏍️ Pelacakan Pesanan Anda</h2>
+                <div id="tracking-status-info" class="mb-8 p-4 bg-yellow-100 border border-yellow-300 rounded-lg text-center">
+                    <p class="text-xl font-semibold text-yellow-800" id="current-status-message">Menunggu Konfirmasi...</p>
+                    <p class="text-sm text-yellow-700 mt-1" id="estimated-time">Pesanan Anda akan tiba dalam waktu sekitar 30 menit.</p>
+                </div>
+                
+                <div id="tracking-steps" class="flex justify-between items-center mb-10 relative max-w-lg mx-auto">
+                    <div class="absolute inset-x-0 top-1/2 h-0.5 bg-gray-300 -z-10"></div>
+                    <div id="step-1" class="text-center z-10 p-3 rounded-full bg-white step-active">
+                        <div class="text-2xl">📝</div>
+                        <span class="text-xs font-medium mt-1 block">Pesanan Masuk</span>
+                    </div>
+                    <div id="step-2" class="text-center z-10 p-3 rounded-full bg-white">
+                        <div class="text-2xl">👨‍🍳</div>
+                        <span class="text-xs font-medium mt-1 block">Sedang Disiapkan</span>
+                    </div>
+                    <div id="step-3" class="text-center z-10 p-3 rounded-full bg-white">
+                        <div class="text-2xl">🏍️</div>
+                        <span class="text-xs font-medium mt-1 block">Dalam Perjalanan</span>
+                    </div>
+                    <div id="step-4" class="text-center z-10 p-3 rounded-full bg-white">
+                        <div class="text-2xl">✅</div>
+                        <span class="text-xs font-medium mt-1 block">Selesai</span>
+                    </div>
+                </div>
+
+                <h3 class="text-xl font-bold text-gray-800 mb-4">Detail Pesanan Lengkap</h3>
+                <div id="tracking-order-details" class="bg-white p-5 border rounded-lg shadow-md">
+                    <!-- Detail pesanan akan muncul di sini --></div>
+                
+                <button onclick="switchPage('menu')" class="mt-8 py-2 px-4 bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium rounded-lg transition duration-200">
+                    Kembali ke Menu Utama
+                </button>
+            `;
+            renderOrderTracking();
+        }
+
+        // ========================== LOGIC KERANJANG ==========================
+
+        function handleQuantityChange(inputElement) {
+            const menuId = parseInt(inputElement.dataset.id);
+            let quantity = parseInt(inputElement.value) || 0;
+            const menu = daftarMenu.find(m => m.id === menuId);
+
+            if (menu.stok === 0) {
+                quantity = 0;
+                inputElement.value = 0;
+                delete appState.pesanan[menuId];
+                displayErrorMessage("Menu ini sedang KOSONG. Pilih menu lain!");
+                return;
+            }
+
+            if (quantity > menu.stok) {
+                quantity = menu.stok;
+                inputElement.value = menu.stok;
+                displayErrorMessage(`Stok ${menu.namaMenu} hanya tersisa ${menu.stok}!`);
+            }
+
+            if (quantity > 0) {
+                appState.pesanan[menuId] = quantity;
+            } else {
+                delete appState.pesanan[menuId];
+            }
+            
+            saveState(); // Simpan perubahan pesanan
+
+            calculateAndDisplayOrder();
+            // Jika user di halaman menu, re-render untuk update kuantitas di kartu
+            if (document.getElementById('menu-list-container')) {
+                renderMenuItems();
+            }
+        }
+        
+        // Fungsi Perhitungan Utama
+        function calculateAndDisplayOrder(isRenderingCart = false) {
+            const orderedItems = Object.keys(appState.pesanan).map(id => {
+                const menu = daftarMenu.find(m => m.id === parseInt(id));
+                const jumlah = appState.pesanan[id];
+                return { menu, jumlah, subTotalItem: menu.hargaSatuan * jumlah };
+            }).filter(item => item.jumlah > 0);
+            
+            let totalAwal = orderedItems.reduce((acc, item) => acc + item.subTotalItem, 0);
+            let subTotal = totalAwal;
+            let totalItemMinuman = orderedItems.filter(item => item.menu.kategoriMenu === "Minuman").reduce((acc, item) => acc + item.jumlah, 0);
+            let diskonPenawaran = 0;
+            let diskon10Persen = 0;
+            
+            const minumanDipesan = orderedItems.filter(item => item.menu.kategoriMenu === "Minuman");
+            if (totalAwal > 50000 && totalItemMinuman >= 2) {
+                let hargaMinumanTermurah = Infinity;
+                minumanDipesan.forEach(item => {
+                    hargaMinumanTermurah = Math.min(hargaMinumanTermurah, item.menu.hargaSatuan);
+                });
+                if (hargaMinumanTermurah !== Infinity) {
+                    diskonPenawaran = hargaMinumanTermurah; 
+                    subTotal -= diskonPenawaran;
+                }
+            }
+
+            if (subTotal > 100000) { 
+                diskon10Persen = Math.round(subTotal * 0.10);
+                subTotal -= diskon10Persen;
+            }
+
+            const BIAYA_PELAYANAN = appState.biayaPelayanan; 
+            const biayaPajak = Math.round(subTotal * 0.10);
+            const totalBayar = subTotal + biayaPajak + BIAYA_PELAYANAN;
+
+            appState.currentOrder = {
+                orderedItems, totalAwal, subTotalSetelahDiskon: subTotal, biayaPajak,
+                biayaPelayanan: BIAYA_PELAYANAN, totalBayar, diskon10Persen, diskonPenawaran
+            };
+
+            // Update UI
+            if (isRenderingCart) {
+                updateCartUI(appState.currentOrder);
+            } else {
+                updateQuickSummary(appState.currentOrder);
+            }
+        }
+        
+        function updateQuickSummary(orderDetails) {
+            const container = document.getElementById('order-summary-quick');
+            const goBtn = document.getElementById('go-to-cart-button');
+
+            if (orderDetails.orderedItems.length === 0) {
+                if (container) container.innerHTML = '<p class="text-gray-500 italic text-sm">Pilih menu di samping untuk melihat ringkasan.</p>';
+                if (goBtn) goBtn.classList.add('hidden');
+                return;
+            }
+
+            if (container) {
+                container.innerHTML = `
+                    <p class="text-sm">Total ${orderDetails.orderedItems.length} jenis item.</p>
+                    <div class="mt-2 border-t pt-2">
+                        <p class="font-bold text-lg flex justify-between">
+                            <span>Total Akhir:</span>
+                            <span class="text-teal-700">${formatRupiah(orderDetails.totalBayar)}</span>
+                        </p>
+                    </div>
+                `;
+            }
+            if (goBtn) goBtn.classList.remove('hidden');
+        }
+
+        function updateCartUI(orderDetails) {
+            const contentContainer = document.getElementById('keranjang-content');
+            const receiptContainer = document.getElementById('receipt-container');
+            const strukDetail = document.getElementById('struk-detail');
+            const cartEmptyMessage = document.getElementById('cart-empty-message');
+            const checkoutBtn = document.getElementById('checkout-button');
+
+            if (orderDetails.orderedItems.length === 0) {
+                cartEmptyMessage.classList.remove('hidden');
+                receiptContainer.classList.add('hidden');
+                return;
+            }
+
+            cartEmptyMessage.classList.add('hidden');
+            receiptContainer.classList.remove('hidden');
+            checkoutBtn.disabled = false;
+            checkoutBtn.innerHTML = 'Bayar & Konfirmasi Pesanan';
+            
+
+            let cartItemsHTML = `
+                <h3 class="text-xl font-bold mb-4">Item dalam Keranjang:</h3>
+                <div class="space-y-3">
+                ${orderDetails.orderedItems.map(item => `
+                    <div class="flex justify-between items-center p-3 border-b">
+                        <div class="capitalize w-1/2">${item.menu.namaMenu}</div>
+                        <div class="text-right w-1/4">${formatRupiah(item.menu.hargaSatuan)}</div>
+                        <input
+                            type="number"
+                            min="0"
+                            max="${item.menu.stok}"
+                            value="${item.jumlah}"
+                            data-id="${item.menu.id}"
+                            oninput="handleQuantityChange(this)"
+                            class="quantity-input focus:ring-teal-500 focus:border-teal-500 mx-2"
+                        />
+                        <div class="font-semibold w-1/4 text-right">${formatRupiah(item.subTotalItem)}</div>
+                    </div>
+                `).join('')}
+                </div>
+            `;
+            
+            const { totalAwal, subTotalSetelahDiskon, diskon10Persen, diskonPenawaran, totalBayar, biayaPajak, biayaPelayanan } = orderDetails;
+
+            let strukHTML = `
+                <div class="space-y-1 text-sm">
+                    <p class="flex justify-between">
+                        <span class="text-gray-600">Total Biaya Awal:</span>
+                        <span class="font-medium">${formatRupiah(totalAwal)}</span>
+                    </p>
+                    <p class="flex justify-between ${diskonPenawaran > 0 ? 'text-green-600 font-semibold' : 'text-gray-400 italic'}">
+                        <span>Potongan B1G1 Minuman:</span>
+                        <span>${diskonPenawaran > 0 ? `-${formatRupiah(diskonPenawaran)}` : 'Tidak Berlaku'}</span>
+                    </p>
+                    <p class="flex justify-between ${diskon10Persen > 0 ? 'text-green-600 font-semibold' : 'text-gray-400 italic'}">
+                        <span>Potongan Diskon 10% (>Rp 100k):</span>
+                        <span>${diskon10Persen > 0 ? `-${formatRupiah(diskon10Persen)}` : 'Tidak Berlaku'}</span>
+                    </p>
+
+                    <p class="flex justify-between border-t border-gray-300 pt-2 font-medium">
+                        <span>Sub Total Setelah Potongan:</span>
+                        <span>${formatRupiah(subTotalSetelahDiskon)}</span>
+                    </p>
+                    
+                    <p class="flex justify-between text-gray-600 font-semibold">
+                        <span>Biaya Pelayanan:</span>
+                        <span>+ ${formatRupiah(biayaPelayanan)}</span>
+                    </p>
+                    <p class="flex justify-between text-gray-600">
+                        <span>Pajak (10%):</span>
+                        <span>+ ${formatRupiah(biayaPajak)}</span>
+                    </p>
+                </div>
+
+                <div class="border-t-4 border-double border-gray-900 mt-4 pt-2">
+                    <p class="font-extrabold text-xl flex justify-between text-teal-700">
+                        <span>TOTAL AKHIR DIBAYAR</span>
+                        <span>${formatRupiah(totalBayar)}</span>
+                    </p>
+                </div>
+            `;
+            
+            contentContainer.innerHTML = cartItemsHTML;
+            strukDetail.innerHTML = strukHTML;
+        }
+
+        // ========================== MODAL & CHECKOUT (ASYNC) ==========================
+
+        function openCheckoutModal() {
+            if (!appState.currentOrder || appState.currentOrder.orderedItems.length === 0) {
+                displayErrorMessage("Keranjang pesanan masih kosong!");
+                return;
+            }
+            const totalBayar = appState.currentOrder.totalBayar;
+            
+            document.getElementById('modal-total-bayar').textContent = formatRupiah(totalBayar);
+            document.getElementById('checkout-modal').classList.remove('hidden');
+        }
+
+        function closeCheckoutModal() {
+            document.getElementById('checkout-modal').classList.add('hidden');
+        }
+
+        function confirmCheckout() {
+            const checkoutBtn = document.getElementById('checkout-button-modal');
+            checkoutBtn.disabled = true;
+            checkoutBtn.innerHTML = '<span class="animate-spin mr-2">⏳</span> Memproses Pembayaran...';
+
+            // Simulasi Pembayaran (2 detik)
+            setTimeout(() => {
+                checkoutBtn.disabled = false;
+                checkoutBtn.innerHTML = 'Konfirmasi & Bayar';
+                closeCheckoutModal();
+
+                // Clear keranjang state and save
+                appState.pesanan = {};
+                saveState(); 
+
+                // Lanjut ke tracking
+                switchPage('tracking');
+                displayErrorMessage("Pesanan berhasil dikonfirmasi dan dibayar!", true);
+                
+            }, 2000); 
+        }
+
+        // ========================== LOGIC TRACKING ==========================
+
+        function getTrackingMessage(step, orderedItems) {
+            const firstItemName = orderedItems[0]?.menu.namaMenu || "Pesanan Anda";
+            
+            switch(step) {
+                case 1:
+                    return { 
+                        statusText: "Menunggu Disiapkan",
+                        message: "Pesanan telah dikonfirmasi dan sedang menunggu untuk disiapkan."
+                    };
+                case 2:
+                    return { 
+                        statusText: "Sedang Disiapkan",
+                        message: `${firstItemName} dan menu lainnya sedang disiapkan dengan penuh cinta oleh tim kami!`
+                    };
+                case 3:
+                    return { 
+                        statusText: "Dalam Perjalanan",
+                        message: `${firstItemName} sedang dibawa oleh kurir dan dalam perjalanan menuju lokasi Anda!`
+                    };
+                case 4:
+                    return { 
+                        statusText: "Selesai",
+                        message: "Pesanan telah tiba di lokasi Anda. Selamat menikmati!"
+                    };
+                default:
+                    return { statusText: "Status Tidak Diketahui", message: "Mohon tunggu sebentar." };
+            }
+        }
+
+        function simulateTracking() {
+            appState.trackingStep++;
+
+            if (appState.trackingStep > 4) {
+                clearInterval(appState.trackingInterval);
+                appState.trackingInterval = null;
+                appState.trackingStep = 4;
+            }
+            
+            renderOrderTracking();
+        }
+
+        function renderOrderTracking() {
+            // Update langkah-langkah visual
+            for (let i = 1; i <= 4; i++) {
+                const stepElement = document.getElementById(`step-${i}`);
+                if (stepElement) {
+                    if (i <= appState.trackingStep) {
+                        stepElement.classList.add('step-active', 'text-teal-600');
+                        stepElement.classList.remove('text-gray-500');
+                    } else {
+                        stepElement.classList.remove('step-active', 'text-teal-600');
+                        stepElement.classList.add('text-gray-500');
+                    }
+                }
+            }
+
+            const currentStatus = getTrackingMessage(appState.trackingStep, appState.currentOrder.orderedItems);
+            document.getElementById('current-status-message').textContent = currentStatus.statusText;
+            document.getElementById('estimated-time').textContent = currentStatus.message;
+
+            const detailsContainer = document.getElementById('tracking-order-details');
+            const { orderedItems, totalAwal, subTotalSetelahDiskon, diskon10Persen, diskonPenawaran, totalBayar, biayaPajak, biayaPelayanan } = appState.currentOrder;
+
+            detailsContainer.innerHTML = `
+                <p class="text-base font-bold mb-3 border-b pb-1">Rincian Item Dipesan:</p>
+                <table class="w-full text-sm mb-4">
+                    <thead>
+                        <tr class="font-semibold text-gray-600">
+                            <th class="w-1/2 text-left">Menu</th>
+                            <th class="w-1/4 text-center">Jml</th>
+                            <th class="w-1/4 text-right">Sub Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${orderedItems.map(item => `
+                            <tr>
+                                <td class="capitalize py-1">${item.menu.namaMenu}</td>
+                                <td class="text-center">${item.jumlah}</td>
+                                <td class="text-right">${formatRupiah(item.subTotalItem)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                
+                <p class="text-base font-bold mb-3 border-b pt-3 pb-1">Rincian Pembayaran:</p>
+                <div class="space-y-1 text-sm">
+                    <p class="flex justify-between">
+                        <span class="text-gray-600">Total Biaya Awal:</span>
+                        <span class="font-medium">${formatRupiah(totalAwal)}</span>
+                    </p>
+                    <p class="flex justify-between ${diskonPenawaran > 0 ? 'text-green-600 font-semibold' : 'text-gray-400 italic'}">
+                        <span>Potongan B1G1 Minuman:</span>
+                        <span>${diskonPenawaran > 0 ? `-${formatRupiah(diskonPenawaran)}` : 'Tidak Berlaku'}</span>
+                    </p>
+                    <p class="flex justify-between ${diskon10Persen > 0 ? 'text-green-600 font-semibold' : 'text-gray-400 italic'}">
+                        <span>Potongan Diskon 10%:</span>
+                        <span>${diskon10Persen > 0 ? `-${formatRupiah(diskon10Persen)}` : 'Tidak Berlaku'}</span>
+                    </p>
+                    
+                    <p class="flex justify-between border-t border-gray-300 pt-2 font-medium">
+                        <span>Sub Total Setelah Potongan:</span>
+                        <span>${formatRupiah(subTotalSetelahDiskon)}</span>
+                    </p>
+                    
+                    <p class="flex justify-between text-gray-600 font-semibold">
+                        <span>Biaya Pelayanan:</span>
+                        <span>+ ${formatRupiah(biayaPelayanan)}</span>
+                    </p>
+                    <p class="flex justify-between text-gray-600">
+                        <span>Pajak (10%):</span>
+                        <span>+ ${formatRupiah(biayaPajak)}</span>
+                    </p>
+                </div>
+                <div class="border-t-2 border-gray-900 mt-4 pt-2">
+                    <p class="font-extrabold text-xl flex justify-between text-teal-700">
+                        <span>TOTAL AKHIR DIBAYAR</span>
+                        <span>${formatRupiah(totalBayar)}</span>
+                    </p>
+                </div>
+            `;
+            
+            if (!appState.trackingInterval && appState.trackingStep < 4) {
+                appState.trackingInterval = setInterval(simulateTracking, 4000); 
+            }
+        }
+
+
+        // Inisialisasi Aplikasi
+        window.onload = () => {
+            loadState(); // Muat state dari localStorage
+            // Jika email terisi, langsung masuk ke halaman utama, jika tidak, ke login.
+            if (appState.userEmail) {
+                document.getElementById('user-display').textContent = appState.userEmail;
+                switchAppView(true);
+            } else {
+                switchAppView(false); 
+            }
+        };
+    </script>
+</body>
+</html>
